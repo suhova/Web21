@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <title>Block_04</title>
+    <meta charset="utf-8">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            let userFriends = [];
+            $.ajax({
+                url: '/getfriend?id=' + sender
+            }).done(function (data2) {
+                let uf = JSON.parse(data2);
+                userFriends = [];
+                for (let j = 0; j < uf.length; j++) {
+                    userFriends.push(uf[j].friend);
+                }
+            });
+            let sender = 'test';
+            $("#mess").click(function () {
+                $("#main").hide();
+                $("#listblack").hide();
+                $("#list").hide();
+                $.ajax({
+                    url: '/mess?id=' + sender
+                }).done(function (data) {
+                    $.ajax({
+                        url: '/getfriend?id=' + sender
+                    }).done(function (data2) {
+                        let uf = JSON.parse(data2);
+                        userFriends = [];
+                        for (let j = 0; j < uf.length; j++) {
+                            userFriends.push(uf[j].friend);
+                        }
+                    });
+                    let tbl = "<ul class=\"todo-list__task-list tasks\">\n";
+                    $.each(JSON.parse(data), function (i, v) {
+                        if(userFriends.includes(v.sender)){
+                            tbl += "<li class=\"todo-list__task-item task-item\">\n" +
+                                "                <div class=\"task-item__view\"> \n" +
+                                "                    <span class=\"task-item__user\" style='background-color: darkorange; color: white'>" + v.sender + "</span>\n" +
+                                "                    <span class=\"task-item__text\">" + v.text + "</span>\n" +
+                                "                </div>\n" +
+                                "            </li>";
+                        } else {
+                            tbl += "<li class=\"todo-list__task-item task-item\">\n" +
+                                "                <div class=\"task-item__view\"> \n" +
+                                "                    <span class=\"task-item__user\">" + v.sender + "</span>\n" +
+                                "                    <span class=\"task-item__text\">" + v.text + "</span>\n" +
+                                "                </div>\n" +
+                                "            </li>";
+                        }
+                    });
+                    tbl += " </ul>";
+                    $("#res").html(tbl);
+                });
+            });
+            $('#send_new').click(function () {
+                if ($('#recipient').val().length > 0) {
+                    $.ajax({
+                        type: "POST",
+                        url: '/new',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            sender: sender,
+                            text: $('#new_mess').val(),
+                            recipient: $('#recipient').val()
+                        }),
+                    }).done(function (data) {
+                        $("#write").trigger("click");
+                    });
+                } else {
+                    $('#recipient').focus();
+                }
+            });
+            $('#friend').click(function () {
+                $("#main").hide();
+                $("#listblack").hide();
+                $("#list").show();
+                $.ajax({
+                    url: '/getfriend?id=' + sender
+                }).done(function (data) {
+                    let tbl = "<ul class=\"todo-list__task-list tasks\">";
+                    $.each(JSON.parse(data), function (i, v) {
+                        tbl += "<li class=\"todo-list__task-item task-item\">\n" +
+                            "                <div class=\"task-item__view\"> \n" +
+                            "                    <span class=\"task-item__text\">" + v.friend + "</span>\n" +
+                            "                </div>\n" +
+                            "            </li>";
+                    });
+                    tbl += " </ul>";
+                    $("#res").html(tbl);
+                });
+            });
+            $('#black').click(function () {
+                $("#main").hide();
+                $("#list").hide();
+                $("#listblack").show();
+                $.ajax({
+                    url: '/getblack?id=' + sender
+                }).done(function (data) {
+                    let tbl = "<ul class=\"todo-list__task-list tasks\">";
+                    $.each(JSON.parse(data), function (i, v) {
+                        tbl += "<li class=\"todo-list__task-item task-item\">\n" +
+                            "                <div class=\"task-item__view\"> \n" +
+                            "                    <span class=\"task-item__text\">" + v.friend + "</span>\n" +
+                            "                </div>\n" +
+                            "            </li>";
+                    });
+                    tbl += " </ul>";
+                    $("#res").html(tbl);
+                });
+            });
+            $("#write").click(function () {
+                $("#list").hide();
+                $("#listblack").hide();
+                $("#main").show();
+                $.ajax({
+                    url: '/sanded?id=' + sender
+                }).done(function (data) {
+                    let tbl = "<ul class=\"todo-list__task-list tasks\">";
+                    $.each(JSON.parse(data), function (i, v) {
+                        tbl += "<li class=\"todo-list__task-item task-item\">\n" +
+                            "                <div class=\"task-item__view\"> \n" +
+                            "                    <span class=\"task-item__user\">" + v.recipient + "</span>\n" +
+                            "                    <span class=\"task-item__text\">" + v.text + "</span>\n" +
+                            "                </div>\n" +
+                            "            </li>";
+                    });
+                    tbl += " </ul>";
+                    $("#res").html(tbl);
+                });
+            });
+            $('#add').click(function () {
+                if($('#userid').val().length>0){
+                    $.ajax({
+                        type: "POST",
+                        url: '/addfriend',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            user: sender,
+                            friend: $('#userid').val()
+                        }),
+                    }).done(function (data) {
+                        $("#friend").trigger("click");
+                    });
+                } else {
+                    $('#userid').focus();
+                }
+            });
+            $('#del').click(function () {
+                if($('#userid').val().length>0){
+                    $.ajax({
+                        type: "POST",
+                        url: '/delfriend',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            user: sender,
+                            friend: $('#userid').val()
+                        }),
+                    }).done(function (data) {
+                        $("#friend").trigger("click");
+                    });
+                } else {
+                    $('#userid').focus();
+                }
+            });
+
+            $('#addblack').click(function () {
+                if($('#useridblack').val().length>0){
+                    $.ajax({
+                        type: "POST",
+                        url: '/addblack',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            user: sender,
+                            friend: $('#useridblack').val()
+                        }),
+                    }).done(function (data) {
+                        $("#black").trigger("click");
+                    });
+                } else {
+                    $('#useridblack').focus();
+                }
+            });
+            $('#delblack').click(function () {
+                if($('#useridblack').val().length>0){
+                    $.ajax({
+                        type: "POST",
+                        url: '/delblack',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            user: sender,
+                            friend: $('#useridblack').val()
+                        }),
+                    }).done(function (data) {
+                        $("#friendblack").trigger("click");
+                    });
+                } else {
+                    $('#useridblack').focus();
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+<header class="todos-header">MESSAGES</header>
+<nav>
+    <div class="actions-bar__item">
+        <div class="task-filter" role="radiogroup">
+            <label class="task-filter__item">
+                <button id="write" class="task-filter__text">WRITE MESSAGE</button>
+            </label>
+            <label class="task-filter__item">
+                <button id="mess" class="task-filter__text">INCOMING MESSAGES</button>
+            </label>
+            <label class="task-filter__item">
+                <button id="friend" class="task-filter__text">MY FRIENDS</button>
+            </label>
+            <label class="task-filter__item">
+                <button id="black" class="task-filter__text">BLACK LIST</button>
+            </label>
+        </div>
+    </div>
+</nav>
+<main class="todo-list">
+    <div id="main">
+        <div class="list-head__id">
+            <div class="list-head__create-new">
+                <input type="text" id="recipient" class="list-head__create-new-input_id" placeholder="SEND MESSAGE TO: "
+                       autofocus="autofocus"/>
+            </div>
+        </div>
+        <div class="todo-list__head list-head">
+            <button id="send_new" class="list-head__select-all">SEND</button>
+            <div class="list-head__create-new">
+                <input type="text" id="new_mess" class="list-head__create-new-input" placeholder="MESSAGE TEXT"
+                       autofocus="autofocus"/>
+            </div>
+        </div>
+    </div>
+    <div id="list" hidden>
+        <div class="todo-list__head list-head">
+            <button id="add" class="list-head__select-all">ADD</button>
+            <button id="del" class="list-head__select-all">DELETE</button>
+            <div class="list-head__create-new">
+                <input type="text" id="userid" class="list-head__create-new-input_list" placeholder="USER LOGIN"
+                       autofocus="autofocus"/>
+            </div>
+        </div>
+    </div>
+    <div id="listblack" hidden>
+        <div class="todo-list__head list-head">
+            <button id="addblack" class="list-head__select-all">ADD</button>
+            <button id="delblack" class="list-head__select-all">DELETE</button>
+            <div class="list-head__create-new">
+                <input type="text" id="useridblack" class="list-head__create-new-input_list" placeholder="USER LOGIN"
+                       autofocus="autofocus"/>
+            </div>
+        </div>
+    </div>
+    <div id="res" class="todo-list__tasks"></div>
+    <style type="text/css">
+        body {
+            display: flex;
+            font-family: "Roboto", sans-serif;
+            background: rgba(0, 0, 0, 0.001);
+            color: #CCCCCC;
+            flex-flow: column;
+            align-items: center;
+        }
+
+        .list-head__id {
+            display: flex;
+            flex-flow: row;
+            justify-content: space-between;
+            border-bottom: #E6E6E6 1px solid;
+        }
+
+        .todos-header {
+            font-size: 100px;
+            letter-spacing: -2.5px;
+            top: 50px;
+            position: relative;
+        }
+
+        .todo-list {
+            display: flex;
+            flex-flow: column;
+            width: 762px;
+            height: 402px;
+            background-color: white;
+            border-radius: 2px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            top: 50px;
+        }
+
+        .todo-list__head {
+            display: flex;
+            flex-direction: row;
+            height: 66px;
+            box-shadow: inset 0px -1px 0px #E6E6E6;
+        }
+
+        .list-head__select-all {
+            width: 70px;
+            height: 66px;
+            border: white 1px solid;
+            font-size: 14px;
+            background-color: darkorange;
+            color: white;
+            font-style: italic;
+            letter-spacing: -0.6px;
+        }
+
+        .list-head__create-new {
+            align-self: center;
+        }
+
+        .list-head__create-new-input_id {
+            position: relative;
+            left: 5px;
+            height: 50px;
+            border: 0;
+            width: 750px;
+            font-size: 24px;
+            letter-spacing: -0.6px;
+            color: #666666;
+        }
+        .list-head__create-new-input_list {
+            font-style: italic;
+            position: relative;
+            left: 5px;
+            height: 50px;
+            border: 0;
+            width: 600px;
+            font-size: 24px;
+            letter-spacing: -0.6px;
+            color: #666666;
+        }
+
+        input, textarea {
+            outline: none;
+        }
+
+        input:active, textarea:active {
+            outline: none;
+        }
+
+        :focus {
+            outline: none;
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        textarea {
+            resize: horizontal;
+        }
+
+        .todo-list__tasks {
+            flex-grow: 1;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        .list-head__create-new-input {
+            border: 0;
+            width: 690px;
+            font-size: 24px;
+            letter-spacing: -0.6px;
+            color: #666666;
+        }
+
+        .list-head__create-new-input::placeholder, .list-head__create-new-input_id::placeholder {
+            font-style: italic;
+            font-size: 24px;
+            letter-spacing: -0.6px;
+            color: #CCCCCC;
+        }
+
+        .tasks {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+        }
+
+        .todo-list__task-item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            min-height: 64px;
+            box-shadow: inset 0px -1px 0px #E6E6E6;
+            font-size: 24px;
+            letter-spacing: -0.6px;
+            color: #666666;
+            overflow-wrap: break-word;
+            word-wrap: normal;
+        }
+
+        .task-item__text {
+            position: relative;
+            padding-left: 10px;
+            padding-right: 10px;
+            width: 80px;
+            height: auto;
+            border: 0;
+        }
+
+        .task-item__user {
+            position: relative;
+            left: 0;
+            padding-left: 10px;
+            padding-right: 10px;
+            width: max-content;
+            float: left;
+            height: 100%;
+            background-color: white;
+            color: darkorange;
+            border: darkorange 1px solid;
+        }
+
+        nav {
+            display: flex;
+            flex-flow: row;
+            justify-content: space-around;
+            height: 43px;
+            width: 100%;
+            font-size: 14px;
+            letter-spacing: -0.35px;
+            color: #888888;
+            background-color: darkorange;
+            box-shadow: inset 0px 1px 0px #E6E6E6;
+            align-items: center;
+            position: absolute;
+            top: 0px;
+        }
+
+        .actions-bar__item {
+            padding: 0px 12px 0px 12px;
+            align-self: center;
+        }
+
+        .task-filter {
+            display: flex;
+        }
+
+        .task-filter__text {
+            border: 1px solid white;
+            width: 300px;
+            border-radius: 2px;
+            padding: 3px;
+            font-size: 20px;
+            background-color: darkorange;
+            color: white;
+        }
+    </style>
+</main>
+</body>
+</html>
