@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <title>Block_04</title>
+    <title>Messages</title>
     <meta charset="utf-8">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
             let userFriends = [];
+            let sender = '';
             $.ajax({
                 url: '/getfriend?id=' + sender
             }).done(function (data2) {
@@ -16,11 +17,126 @@
                     userFriends.push(uf[j].friend);
                 }
             });
-            let sender = 'test';
+            // вход
+            $("#but_login").click(function () {
+                if (($('#login_log').val().length > 0) && ($('#pass_log').val().length > 0)) {
+                    $.ajax({
+                        type: "POST",
+                        url: '/getPass',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            login: $('#login_log').val(),
+                            password: $('#pass_log').val()
+                        }),
+                    })
+                        .done(function (data) {
+                            if (data != "null") {
+                                sender = $('#login_log').val();
+                                // заполняем список друзей
+                                $.ajax({
+                                    url: '/getfriend?id=' + sender
+                                }).done(function (data2) {
+                                    let uf = JSON.parse(data2);
+                                    userFriends = [];
+                                    for (let j = 0; j < uf.length; j++) {
+                                        userFriends.push(uf[j].friend);
+                                    }
+                                });
+                                $("#login").hide();
+                                $("#registr").hide();
+                                $("#list").hide();
+                                $("#listblack").hide();
+                                $("#main").show();
+                                $("#navbar").show();
+                                $("#div_logout").show();
+                                $("#write").trigger("click");
+                                //очищаем формы ввода после релогина
+                                $("#userid").val('');
+                                $("#useridblack").val('');
+                                $("#new_mess").val('');
+                                $("#recipient").val('');
+                            }
+                            else {
+                                alert("Incorrect login or password");
+                            }
+                        })
+                        .fail(function () {
+                            alert("Error");
+                        });
+                } else {
+                    alert("Error");
+                }
+            });
+            //регистрация
+            $('#but_signup').click(function () {
+                if (($('#login_reg').val().length > 0) && ($('#pass_reg').val().length > 0)) {
+                    $.ajax({
+                        type: "POST",
+                        url: '/registrCheck',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            login: $('#login_reg').val()
+                        }),
+                    }).done(function (data) {
+                        if (data == "null") {
+                            $.ajax({
+                                type: "POST",
+                                url: '/newuser',
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    login: $('#login_reg').val(),
+                                    password: $('#pass_reg').val()
+                                }),
+                            }).done(function (data) {
+                                $("#list").hide();
+                                $("#listblack").hide();
+                                $("#main").show();
+                                $("#navbar").show();
+                                $("#div_logout").show();
+                                $("#login").hide();
+                                $("#registr").hide();
+                                $("#write").trigger("click");
+                            });
+                        } else {
+                            alert("You are already registered!");
+                        }
+                    });
+                } else {
+                    alert("Error");
+                }
+            });
+            $("#but_to_signup").click(function () {
+                $("#list").hide();
+                $("#listblack").hide();
+                $("#main").hide();
+                $("#login").hide();
+                $("#registr").show();
+            });
+            $("#but_to_login").click(function () {
+                $("#list").hide();
+                $("#listblack").hide();
+                $("#main").hide();
+                $("#registr").hide();
+                $("#login").show();
+            });
+            $("#logout").click(function () {
+                $("#list").hide();
+                $("#listblack").hide();
+                $("#main").hide();
+                $("#registr").hide();
+                $("#login").show();
+                $("#div_logout").hide();
+                $("#res").hide();
+                $("#navbar").hide();
+            });
             $("#mess").click(function () {
                 $("#main").hide();
                 $("#listblack").hide();
                 $("#list").hide();
+                $("#login").hide();
+                $("#registr").hide();
+                $("#res").show();
+                $("#div_logout").show();
                 $.ajax({
                     url: '/mess?id=' + sender
                 }).done(function (data) {
@@ -35,7 +151,7 @@
                     });
                     let tbl = "<ul class=\"todo-list__task-list tasks\">\n";
                     $.each(JSON.parse(data), function (i, v) {
-                        if(userFriends.includes(v.sender)){
+                        if (userFriends.includes(v.sender)) {
                             tbl += "<li class=\"todo-list__task-item task-item\">\n" +
                                 "                <div class=\"task-item__view\"> \n" +
                                 "                    <span class=\"task-item__user\" style='background-color: darkorange; color: white'>" + v.sender + "</span>\n" +
@@ -56,18 +172,32 @@
                 });
             });
             $('#send_new').click(function () {
-                if ($('#recipient').val().length > 0) {
+                if (($('#recipient').val().length > 0) && ($('#new_mess').val().length > 0)) {
                     $.ajax({
                         type: "POST",
-                        url: '/new',
+                        url: '/blacklistCheck',
                         contentType: 'application/json',
                         data: JSON.stringify({
-                            sender: sender,
-                            text: $('#new_mess').val(),
-                            recipient: $('#recipient').val()
+                            user: $('#recipient').val(),
+                            friend: sender
                         }),
                     }).done(function (data) {
-                        $("#write").trigger("click");
+                        if (data == 'null') {
+                            $.ajax({
+                                type: "POST",
+                                url: '/new',
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    sender: sender,
+                                    text: $('#new_mess').val(),
+                                    recipient: $('#recipient').val()
+                                }),
+                            }).done(function (data) {
+                                $("#write").trigger("click");
+                            });
+                        } else {
+                            alert("You are blacklisted!");
+                        }
                     });
                 } else {
                     $('#recipient').focus();
@@ -77,11 +207,17 @@
                 $("#main").hide();
                 $("#listblack").hide();
                 $("#list").show();
+                $("#login").hide();
+                $("#registr").hide();
+                $("#res").show();
+                $("#div_logout").show();
                 $.ajax({
                     url: '/getfriend?id=' + sender
                 }).done(function (data) {
+                    userFriends = [];
                     let tbl = "<ul class=\"todo-list__task-list tasks\">";
                     $.each(JSON.parse(data), function (i, v) {
+                        userFriends.push(v.friend);
                         tbl += "<li class=\"todo-list__task-item task-item\">\n" +
                             "                <div class=\"task-item__view\"> \n" +
                             "                    <span class=\"task-item__text\">" + v.friend + "</span>\n" +
@@ -96,6 +232,10 @@
                 $("#main").hide();
                 $("#list").hide();
                 $("#listblack").show();
+                $("#login").hide();
+                $("#registr").hide();
+                $("#res").show();
+                $("#div_logout").show();
                 $.ajax({
                     url: '/getblack?id=' + sender
                 }).done(function (data) {
@@ -115,41 +255,69 @@
                 $("#list").hide();
                 $("#listblack").hide();
                 $("#main").show();
+                $("#login").hide();
+                $("#registr").hide();
+                $("#res").show();
+                $("#div_logout").show();
                 $.ajax({
                     url: '/sanded?id=' + sender
                 }).done(function (data) {
                     let tbl = "<ul class=\"todo-list__task-list tasks\">";
                     $.each(JSON.parse(data), function (i, v) {
-                        tbl += "<li class=\"todo-list__task-item task-item\">\n" +
-                            "                <div class=\"task-item__view\"> \n" +
-                            "                    <span class=\"task-item__user\">" + v.recipient + "</span>\n" +
-                            "                    <span class=\"task-item__text\">" + v.text + "</span>\n" +
-                            "                </div>\n" +
-                            "            </li>";
+                        if (userFriends.includes(v.recipient)) {
+                            tbl += "<li class=\"todo-list__task-item task-item\">\n" +
+                                "                <div class=\"task-item__view\"> \n" +
+                                "                    <span class=\"task-item__user\" style='background-color: darkorange; color: white'>" + v.recipient + "</span>\n" +
+                                "                    <span class=\"task-item__text\">" + v.text + "</span>\n" +
+                                "                </div>\n" +
+                                "            </li>";
+                        } else {
+                            tbl += "<li class=\"todo-list__task-item task-item\">\n" +
+                                "                <div class=\"task-item__view\"> \n" +
+                                "                    <span class=\"task-item__user\">" + v.recipient + "</span>\n" +
+                                "                    <span class=\"task-item__text\">" + v.text + "</span>\n" +
+                                "                </div>\n" +
+                                "            </li>";
+                        }
                     });
                     tbl += " </ul>";
                     $("#res").html(tbl);
                 });
             });
             $('#add').click(function () {
-                if($('#userid').val().length>0){
+                if ($('#userid').val().length > 0) {
                     $.ajax({
                         type: "POST",
-                        url: '/addfriend',
+                        url: '/findUniqueFriends',
                         contentType: 'application/json',
                         data: JSON.stringify({
                             user: sender,
                             friend: $('#userid').val()
                         }),
                     }).done(function (data) {
-                        $("#friend").trigger("click");
+                        if (data == 'null') {
+                            $.ajax({
+                                type: "POST",
+                                url: '/addfriend',
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    user: sender,
+                                    friend: $('#userid').val()
+                                }),
+                            }).done(function (data) {
+                                $("#friend").trigger("click");
+                            });
+                        }
+                        else {
+                            alert("You are already friends!");
+                        }
                     });
                 } else {
                     $('#userid').focus();
                 }
             });
             $('#del').click(function () {
-                if($('#userid').val().length>0){
+                if ($('#userid').val().length > 0) {
                     $.ajax({
                         type: "POST",
                         url: '/delfriend',
@@ -165,12 +333,43 @@
                     $('#userid').focus();
                 }
             });
-
             $('#addblack').click(function () {
-                if($('#useridblack').val().length>0){
+                if ($('#useridblack').val().length > 0) {
                     $.ajax({
                         type: "POST",
-                        url: '/addblack',
+                        url: '/findUniqueBlacklist',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            user: sender,
+                            friend: $('#useridblack').val()
+                        }),
+                    }).done(function (data) {
+                        if (data == 'null') {
+                            $.ajax({
+                                type: "POST",
+                                url: '/addblack',
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    user: sender,
+                                    friend: $('#useridblack').val()
+                                }),
+                            }).done(function (data) {
+                                $("#black").trigger("click");
+                            });
+                        }
+                        else {
+                            alert("This user is already blacklisted!");
+                        }
+                    });
+                } else {
+                    $('#userid').focus();
+                }
+            });
+            $('#delblack').click(function () {
+                if ($('#useridblack').val().length > 0) {
+                    $.ajax({
+                        type: "POST",
+                        url: '/delblack',
                         contentType: 'application/json',
                         data: JSON.stringify({
                             user: sender,
@@ -183,30 +382,13 @@
                     $('#useridblack').focus();
                 }
             });
-            $('#delblack').click(function () {
-                if($('#useridblack').val().length>0){
-                    $.ajax({
-                        type: "POST",
-                        url: '/delblack',
-                        contentType: 'application/json',
-                        data: JSON.stringify({
-                            user: sender,
-                            friend: $('#useridblack').val()
-                        }),
-                    }).done(function (data) {
-                        $("#friendblack").trigger("click");
-                    });
-                } else {
-                    $('#useridblack').focus();
-                }
-            });
         });
     </script>
 </head>
 <body>
 <header class="todos-header">MESSAGES</header>
 <nav>
-    <div class="actions-bar__item">
+    <div id="navbar" class="actions-bar__item" hidden>
         <div class="task-filter" role="radiogroup">
             <label class="task-filter__item">
                 <button id="write" class="task-filter__text">WRITE MESSAGE</button>
@@ -222,9 +404,32 @@
             </label>
         </div>
     </div>
+    <div id="div_logout" hidden>
+        <button id="logout" class="but_logout">LOG OUT</button>
+    </div>
 </nav>
 <main class="todo-list">
-    <div id="main">
+    <div id="login">
+        <div class="login_div">
+            </br>
+            <h1>LogIn</h1>
+            <input id="login_log" class="input_login" type="text" placeholder="login"></br>
+            <input id="pass_log" class="input_login" type="password" placeholder="password"></br>
+            <button id="but_login" class="but_login">Login</button>
+            <button id="but_to_signup" class="but_signup">SignUp</button>
+        </div>
+    </div>
+    <div id="registr" hidden>
+        <div class="login_div">
+            </br>
+            <h1>SignUp</h1>
+            <input id="login_reg" class="input_login" type="text" placeholder="login"></br>
+            <input id="pass_reg" class="input_login" type="password" placeholder="password"></br>
+            <button id="but_signup" class="but_login">SignUp</button>
+            <button id="but_to_login" class="but_signup">Login</button>
+        </div>
+    </div>
+    <div id="main" hidden>
         <div class="list-head__id">
             <div class="list-head__create-new">
                 <input type="text" id="recipient" class="list-head__create-new-input_id" placeholder="SEND MESSAGE TO: "
@@ -244,7 +449,7 @@
             <button id="add" class="list-head__select-all">ADD</button>
             <button id="del" class="list-head__select-all">DELETE</button>
             <div class="list-head__create-new">
-                <input type="text" id="userid" class="list-head__create-new-input_list" placeholder="USER LOGIN"
+                <input type="text" id="userid" class="list-head__create-new-input_list" placeholder="FRIEND LOGIN"
                        autofocus="autofocus"/>
             </div>
         </div>
@@ -254,12 +459,12 @@
             <button id="addblack" class="list-head__select-all">ADD</button>
             <button id="delblack" class="list-head__select-all">DELETE</button>
             <div class="list-head__create-new">
-                <input type="text" id="useridblack" class="list-head__create-new-input_list" placeholder="USER LOGIN"
+                <input type="text" id="useridblack" class="list-head__create-new-input_list" placeholder="BLOCKED USER LOGIN"
                        autofocus="autofocus"/>
             </div>
         </div>
     </div>
-    <div id="res" class="todo-list__tasks"></div>
+    <div id="res" class="todo-list__tasks" hidden></div>
     <style type="text/css">
         body {
             display: flex;
@@ -328,6 +533,7 @@
             letter-spacing: -0.6px;
             color: #666666;
         }
+
         .list-head__create-new-input_list {
             font-style: italic;
             position: relative;
@@ -378,11 +584,11 @@
             color: #666666;
         }
 
-        .list-head__create-new-input::placeholder, .list-head__create-new-input_id::placeholder {
+        .list-head__create-new-input::placeholder, .list-head__create-new-input_id::placeholder, .list-head__create-new-input_list::placeholder {
             font-style: italic;
             font-size: 24px;
             letter-spacing: -0.6px;
-            color: #CCCCCC;
+            color: #cccccc;
         }
 
         .tasks {
@@ -458,6 +664,69 @@
             padding: 3px;
             font-size: 20px;
             background-color: darkorange;
+            color: white;
+        }
+
+        .login_div {
+            text-align: center;
+            margin: 0 auto;
+            background-color: darkorange;
+            width: 300px;
+            border-radius: 30px;
+        }
+
+        .input_login {
+            border: 2px solid darkorange;
+            border-radius: 20px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .but_login {
+            background-color: white;
+            width: 100px;
+            height: 50px;
+            color: darkorange;
+            font-weight: bolder;
+            border: 2px solid darkorange;
+            border-radius: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .but_login:hover {
+            background-color: darkorange;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .but_signup {
+            background-color: darkorange;
+            color: white;
+            border: 0px;
+            width: 50px;
+        }
+
+        .but_signup:hover {
+            font-weight: bolder;
+        }
+
+        .but_logout {
+            background-color: white;
+            color: darkorange;
+            font-weight: bolder;
+            border: 0px;
+            width: 80px;
+        }
+
+        .but_logout:hover {
+            background-color: darkorange;
+            color: white;
+            font-weight: bolder;
+            border: 2px solid white;
+        }
+
+        h1 {
             color: white;
         }
     </style>

@@ -23,6 +23,7 @@ client.connect((e, client) => {
         console.log("Start Server");
     });
 });
+
 app.use("/mess", function (request, response) {
     console.log("Get messages by recipient");
     let par = request.url.match(/id=(.+)/);
@@ -42,14 +43,13 @@ app.use("/mess", function (request, response) {
 
 app.use("/write", function (request, response) {
     console.log("Get sended messages");
-    last.sended(request, response, db.collection(collMess));
+    last.sanded(request, response, db.collection(collMess));
 });
 
 app.post("/new", function (request, response) {
     console.log("Create new message");
     nm.new_message(request, response, db.collection(collMess));
 });
-
 
 app.post("/addblack", function (request, response) {
     console.log("Add in black list");
@@ -81,17 +81,38 @@ app.use("/getfriend", function (request, response) {
     lists.get_users_from_list(request, response, db.collection(collFriends));
 });
 
-app.use("/newuser", function (request, response) {
+app.post("/newuser", function (request, response) {
     console.log("Create new user");
     lists.add_user(request, response, db.collection(collLogins));
 });
 
-app.use("/getPass", function (request, response) {
-    console.log("Create new user");
+app.post("/getPass", function (request, response) {
+    console.log("Get login and password");
     select.get_login(request, response, db.collection(collLogins));
 });
+
 app.use("/sanded", function (request, response) {
     console.log("Get sanded messages");
     console.log(request.body);
     select.sanded(request, response, db.collection(collMess));
+});
+
+app.post("/findUniqueFriends", function (request, response) {
+    console.log("Find unique friend");
+    lists.find_unique_user(request, response, db.collection(collFriends));
+});
+
+app.post("/findUniqueBlacklist", function (request, response) {
+    console.log("Find unique user in black list");
+    lists.find_unique_user(request, response, db.collection(collBlack));
+});
+
+app.post("/blacklistCheck", function (request, response) {
+    console.log("Blacklist check");
+    lists.find_unique_user(request, response, db.collection(collBlack));
+});
+
+app.post("/registrCheck", function (request, response) {
+    console.log("Registration check");
+    lists.find_registr_user(request, response, db.collection(collLogins));
 });

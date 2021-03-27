@@ -1,20 +1,17 @@
 {
-  "name": "Block_04",
+  "name": "webpr",
   "version": "1.0.0",
+  "description": "",
   "main": "index.js",
-  "license": "MIT",
+  "scripts": {
+    "run": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
-    "koa": "^2.13.1",
-    "koa-router": "^10.0.0",
-    "mongodb": "^3.6.4"
-  },
-  "scripts": {
-    "run": "node index.js",
-    "start": "http-server -a localhost -p 8000 -c-1"
-  },
-  "devDependencies": {
-    "koa-static": "^5.0.0"
+    "mongodb": "^3.6.5"
   }
 }
