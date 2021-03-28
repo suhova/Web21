@@ -42,7 +42,7 @@ module.exports.get_users_from_list = function (request, response, collection) {
         response.statusCode = 400;
         response.end();
     } else {
-        collection.find({user: par[1]})//.distinct("friend")
+        collection.find({user: par[1]})
             .toArray((e, a) => {
             console.log(a);
             response.write(JSON.stringify(a));

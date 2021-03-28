@@ -28,8 +28,7 @@
                             login: $('#login_log').val(),
                             password: $('#pass_log').val()
                         }),
-                    })
-                        .done(function (data) {
+                    }).done(function (data) {
                             if (data != "null") {
                                 sender = $('#login_log').val();
                                 // заполняем список друзей
@@ -229,27 +228,7 @@
                 });
             });
             $('#black').click(function () {
-                $("#main").hide();
-                $("#list").hide();
-                $("#listblack").show();
-                $("#login").hide();
-                $("#registr").hide();
-                $("#res").show();
-                $("#div_logout").show();
-                $.ajax({
-                    url: '/getblack?id=' + sender
-                }).done(function (data) {
-                    let tbl = "<ul class=\"todo-list__task-list tasks\">";
-                    $.each(JSON.parse(data), function (i, v) {
-                        tbl += "<li class=\"todo-list__task-item task-item\">\n" +
-                            "                <div class=\"task-item__view\"> \n" +
-                            "                    <span class=\"task-item__text\">" + v.friend + "</span>\n" +
-                            "                </div>\n" +
-                            "            </li>";
-                    });
-                    tbl += " </ul>";
-                    $("#res").html(tbl);
-                });
+                window.open("http://localhost:8000/black?id="+ sender,"_self")
             });
             $("#write").click(function () {
                 $("#list").hide();
@@ -333,55 +312,6 @@
                     $('#userid').focus();
                 }
             });
-            $('#addblack').click(function () {
-                if ($('#useridblack').val().length > 0) {
-                    $.ajax({
-                        type: "POST",
-                        url: '/findUniqueBlacklist',
-                        contentType: 'application/json',
-                        data: JSON.stringify({
-                            user: sender,
-                            friend: $('#useridblack').val()
-                        }),
-                    }).done(function (data) {
-                        if (data == 'null') {
-                            $.ajax({
-                                type: "POST",
-                                url: '/addblack',
-                                contentType: 'application/json',
-                                data: JSON.stringify({
-                                    user: sender,
-                                    friend: $('#useridblack').val()
-                                }),
-                            }).done(function (data) {
-                                $("#black").trigger("click");
-                            });
-                        }
-                        else {
-                            alert("This user is already blacklisted!");
-                        }
-                    });
-                } else {
-                    $('#userid').focus();
-                }
-            });
-            $('#delblack').click(function () {
-                if ($('#useridblack').val().length > 0) {
-                    $.ajax({
-                        type: "POST",
-                        url: '/delblack',
-                        contentType: 'application/json',
-                        data: JSON.stringify({
-                            user: sender,
-                            friend: $('#useridblack').val()
-                        }),
-                    }).done(function (data) {
-                        $("#black").trigger("click");
-                    });
-                } else {
-                    $('#useridblack').focus();
-                }
-            });
         });
     </script>
 </head>
@@ -450,16 +380,6 @@
             <button id="del" class="list-head__select-all">DELETE</button>
             <div class="list-head__create-new">
                 <input type="text" id="userid" class="list-head__create-new-input_list" placeholder="FRIEND LOGIN"
-                       autofocus="autofocus"/>
-            </div>
-        </div>
-    </div>
-    <div id="listblack" hidden>
-        <div class="todo-list__head list-head">
-            <button id="addblack" class="list-head__select-all">ADD</button>
-            <button id="delblack" class="list-head__select-all">DELETE</button>
-            <div class="list-head__create-new">
-                <input type="text" id="useridblack" class="list-head__create-new-input_list" placeholder="BLOCKED USER LOGIN"
                        autofocus="autofocus"/>
             </div>
         </div>
